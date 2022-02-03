@@ -1,3 +1,4 @@
+
 console.log('connected')
 
 const getAllBtn = document.querySelector('#all')
@@ -12,7 +13,7 @@ const newAgeInput = document.querySelector('#age')
 const newLikesText = document.querySelector('textarea')
 const charContainer = document.querySelector('section')
 
-// const baseURL = 
+const baseURL = `http://localhost:4000`
 
 function createCharacterCard(char) {
   let charCard = document.createElement('div')
@@ -31,3 +32,79 @@ function createCharacterCard(char) {
 function clearCharacters() {
   charContainer.innerHTML = ``
 }
+
+const getAllChars = () => {
+  clearCharacters()
+
+  axios.get(`${baseURL}/characters`)
+    .then((response) => {
+      console.log(response.data)
+      for (let i = 0; i < response.data.length; i++) {
+        createCharacterCard(response.data[i])
+      }
+    })
+    .catch(error => console.log(error))
+}
+
+const getOneChar = (event) => {
+  clearCharacters()
+
+  axios.get(`${baseURL}/character/${event.target.id}`)
+    .then((response) => {
+      createCharacterCard(response.data)
+    })
+    .catch(error => console.log(error))
+}
+
+const getOldChars = (event) => {
+  event.preventDefault()
+  clearCharacters()
+
+  axios.get(`${baseURL}/character/?age=${ageInput.value}`)
+    .then((res) => {
+      for (let i = 0; i < res.data.length; i++) {
+        createCharacterCard(res.data[i])
+      }
+    })
+    .catch(error => console.log(error))
+
+    ageInput.value = ''
+}
+
+const addNewChar = (event) => {
+  event.preventDefault()
+
+  const newLikes = [...newLikesText.value.trim().split(`,`)]
+  let body = { 
+    firstName : newFirstInput.value,
+    lastName : newLastInput.value,
+    gender : newGenderDropDown.value,
+    age : newAgeInput.value,
+    likes : newLikes
+  }
+  
+  axios.post(`${baseURL}/character/`, body)
+    .then((res) => {
+      for (let i = 0; i < res.data.length; i++) {
+        createCharacterCard(res.data[i])
+      }
+    })
+    .catch(error => console.log(error))
+
+    getAllChars()
+
+    newFirstInput.value = ""
+    newLastInput.value = ""
+    newGenderDropDown.value = "nonbinary"
+    newAgeInput.value = ""
+    newLikesText.value = ""
+} 
+
+for(let i = 0; i < charBtns.length; i++) {
+  charBtns[i].addEventListener("click", getOneChar)
+}
+getAllBtn.addEventListener("click", getAllChars)
+ageForm.addEventListener("submit", getOldChars)
+createForm.addEventListener("submit", addNewChar)
+
+getAllChars()
